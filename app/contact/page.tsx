@@ -16,19 +16,19 @@ export default function ContactPage() {
           <div className="space-y-6 rounded-2xl bg-zinc-900 p-8">
 
             <p>
-              <strong>Phone:</strong> +234 810 623 213
+              <strong>Phone:</strong> +234 8067942779
             </p>
 
             <p>
-              <strong>Email:</strong> info@ibkwears.com
+              <strong>Email:</strong> ibiks20@gmail.com 
             </p>
 
             <p>
-              <strong>WhatsApp:</strong> +234 810 623 213
+              <strong>WhatsApp:</strong> +234 8067942779
             </p>
 
             <p>
-              <strong>Address:</strong> Lagos, Nigeria
+              <strong>Address:</strong> Osun State, Nigeria
             </p>
 
           </div>
