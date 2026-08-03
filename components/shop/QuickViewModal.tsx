@@ -116,7 +116,7 @@ export default function QuickViewModal({
               />
 
               <a
-                href={`https://wa.me/234810623213?text=${encodeURIComponent(
+                href={`https://wa.me/08067942779?text=${encodeURIComponent(
                   `Hello IBK WEARS, I want to order ${product.name}.`
                 )}`}
                 target="_blank"

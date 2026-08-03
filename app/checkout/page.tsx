@@ -100,7 +100,7 @@ I have just placed an order on your website.`
       );
 
       window.location.href =
-        `https://wa.me/234810623213?text=${message}`;
+        `https://wa.me/08067942779?text=${message}`;
     } catch (error) {
       console.error(
         "CHECKOUT ERROR:",
