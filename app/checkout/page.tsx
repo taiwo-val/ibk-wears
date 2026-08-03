@@ -1,24 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/context/CartContext";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export default function CheckoutPage() {
   const router = useRouter();
 
   const { cart, clearCart } = useCart();
 
-  const [customerName, setCustomerName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [orderError, setOrderError] = useState("");
+  const [checkingAuth, setCheckingAuth] =
+    useState(true);
+
+  const [customerName, setCustomerName] =
+    useState("");
+
+  const [phone, setPhone] =
+    useState("");
+
+  const [address, setAddress] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [orderError, setOrderError] =
+    useState("");
+
+  /*
+   * Check if the customer is logged in.
+   *
+   * If they are not logged in, send them to:
+   *
+   * /login?redirect=/checkout
+   *
+   * After successful login, your updated LoginPage
+   * will send them back to /checkout.
+   */
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkAuthentication() {
+      try {
+        const {
+          data: { user },
+        } = await supabaseBrowser.auth.getUser();
+
+        if (!mounted) return;
+
+        if (!user) {
+          router.replace(
+            "/login?redirect=/checkout"
+          );
+          return;
+        }
+
+        setCheckingAuth(false);
+      } catch (error) {
+        console.error(
+          "Authentication check failed:",
+          error
+        );
+
+        if (mounted) {
+          router.replace(
+            "/login?redirect=/checkout"
+          );
+        }
+      }
+    }
+
+    checkAuthentication();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
 
   const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) =>
+      sum +
+      item.price *
+        item.quantity,
     0
   );
 
@@ -30,29 +97,61 @@ export default function CheckoutPage() {
     setOrderError("");
 
     if (cart.length === 0) {
-      setOrderError("Your cart is empty.");
+      setOrderError(
+        "Your cart is empty."
+      );
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customer_name: customerName,
-          phone,
-          address,
-          items: cart,
-        }),
-      });
+      /*
+       * Double-check authentication before
+       * placing the order.
+       *
+       * This prevents an unauthenticated user
+       * from submitting an order if their session
+       * expires while they are on the checkout page.
+       */
 
-      const result = await response.json();
+      const {
+        data: { user },
+      } =
+        await supabaseBrowser.auth.getUser();
 
-      console.log("ORDER API RESPONSE:", result);
+      if (!user) {
+        router.push(
+          "/login?redirect=/checkout"
+        );
+        return;
+      }
+
+      const response = await fetch(
+        "/api/orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            customer_name:
+              customerName,
+            phone,
+            address,
+            items: cart,
+          }),
+        }
+      );
+
+      const result =
+        await response.json();
+
+      console.log(
+        "ORDER API RESPONSE:",
+        result
+      );
 
       if (!response.ok) {
         const message =
@@ -72,16 +171,30 @@ export default function CheckoutPage() {
         .join("\n");
 
       const orderTotal = Number(
-        result.order?.total ?? total
+        result.order?.total ??
+          total
       );
 
       const orderId =
-        result.order?.id ?? "N/A";
+        result.order?.id ??
+        "N/A";
 
       clearCart();
 
-      const message = encodeURIComponent(
-        `Hello IBK WEARS!
+      /*
+       * WhatsApp number:
+       *
+       * 08067942779
+       *
+       * Converted to Nigerian
+       * international format:
+       *
+       * 2348067942779
+       */
+
+      const message =
+        encodeURIComponent(
+          `Hello IBK WEARS!
 
 My Name: ${customerName}
 
@@ -97,10 +210,10 @@ Order Total: ₦${orderTotal.toLocaleString()}
 Order ID: ${orderId}
 
 I have just placed an order on your website.`
-      );
+        );
 
       window.location.href =
-        `https://wa.me/08067942779?text=${message}`;
+        `https://wa.me/2348067942779?text=${message}`;
     } catch (error) {
       console.error(
         "CHECKOUT ERROR:",
@@ -117,12 +230,46 @@ I have just placed an order on your website.`
     }
   }
 
+  /*
+   * While checking authentication,
+   * don't show checkout yet.
+   */
+
+  if (checkingAuth) {
+    return (
+      <>
+        <Navbar />
+
+        <main className="flex min-h-screen items-center justify-center bg-black px-6 pt-20 text-white">
+
+          <div className="text-center">
+
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-yellow-500" />
+
+            <p className="mt-6 text-zinc-400">
+              Checking your account...
+            </p>
+
+          </div>
+
+        </main>
+
+        <Footer />
+      </>
+    );
+  }
+
+  /*
+   * Empty cart
+   */
+
   if (cart.length === 0) {
     return (
       <>
         <Navbar />
 
         <main className="min-h-screen bg-black px-6 pt-32 pb-20 text-white">
+
           <div className="mx-auto max-w-3xl text-center">
 
             <h1 className="text-5xl font-black">
@@ -134,13 +281,16 @@ I have just placed an order on your website.`
             </p>
 
             <button
-              onClick={() => router.push("/shop")}
-              className="mt-8 rounded-xl bg-yellow-500 px-8 py-4 font-bold text-black hover:bg-yellow-400"
+              onClick={() =>
+                router.push("/shop")
+              }
+              className="mt-8 rounded-xl bg-yellow-500 px-8 py-4 font-bold text-black transition hover:bg-yellow-400"
             >
               Continue Shopping
             </button>
 
           </div>
+
         </main>
 
         <Footer />
@@ -153,6 +303,7 @@ I have just placed an order on your website.`
       <Navbar />
 
       <main className="min-h-screen bg-black px-6 pt-32 pb-20 text-white">
+
         <div className="mx-auto max-w-4xl">
 
           <h1 className="mb-10 text-5xl font-black">
@@ -161,6 +312,7 @@ I have just placed an order on your website.`
 
           {orderError && (
             <div className="mb-8 rounded-2xl border border-red-500 bg-red-950/40 p-6">
+
               <h2 className="text-lg font-bold text-red-400">
                 Unable to place order
               </h2>
@@ -168,8 +320,11 @@ I have just placed an order on your website.`
               <p className="mt-2 text-red-200">
                 {orderError}
               </p>
+
             </div>
           )}
+
+          {/* Order Summary */}
 
           <div className="mb-8 rounded-2xl bg-zinc-900 p-6">
 
@@ -180,11 +335,14 @@ I have just placed an order on your website.`
             <div className="space-y-4">
 
               {cart.map((item) => (
+
                 <div
                   key={item.id}
                   className="flex items-center justify-between border-b border-zinc-800 pb-4"
                 >
+
                   <div>
+
                     <p className="font-semibold">
                       {item.name}
                     </p>
@@ -192,6 +350,7 @@ I have just placed an order on your website.`
                     <p className="text-sm text-zinc-400">
                       Quantity: {item.quantity}
                     </p>
+
                   </div>
 
                   <p className="font-bold text-yellow-500">
@@ -201,7 +360,9 @@ I have just placed an order on your website.`
                       item.quantity
                     ).toLocaleString()}
                   </p>
+
                 </div>
+
               ))}
 
             </div>
@@ -209,18 +370,23 @@ I have just placed an order on your website.`
             <div className="mt-6 border-t border-zinc-800 pt-6">
 
               <div className="flex justify-between text-2xl font-black">
+
                 <span>
                   Total
                 </span>
 
                 <span className="text-yellow-500">
-                  ₦{total.toLocaleString()}
+                  ₦
+                  {total.toLocaleString()}
                 </span>
+
               </div>
 
             </div>
 
           </div>
+
+          {/* Delivery Information */}
 
           <form
             onSubmit={handleSubmit}
@@ -233,7 +399,10 @@ I have just placed an order on your website.`
 
             <div className="space-y-6">
 
+              {/* Full Name */}
+
               <div>
+
                 <label
                   htmlFor="customerName"
                   className="mb-2 block font-semibold"
@@ -248,13 +417,19 @@ I have just placed an order on your website.`
                   required
                   value={customerName}
                   onChange={(e) =>
-                    setCustomerName(e.target.value)
+                    setCustomerName(
+                      e.target.value
+                    )
                   }
                   className="w-full rounded-xl bg-zinc-800 p-4 outline-none focus:ring-2 focus:ring-yellow-500"
                 />
+
               </div>
 
+              {/* Phone */}
+
               <div>
+
                 <label
                   htmlFor="phone"
                   className="mb-2 block font-semibold"
@@ -269,13 +444,19 @@ I have just placed an order on your website.`
                   required
                   value={phone}
                   onChange={(e) =>
-                    setPhone(e.target.value)
+                    setPhone(
+                      e.target.value
+                    )
                   }
                   className="w-full rounded-xl bg-zinc-800 p-4 outline-none focus:ring-2 focus:ring-yellow-500"
                 />
+
               </div>
 
+              {/* Address */}
+
               <div>
+
                 <label
                   htmlFor="address"
                   className="mb-2 block font-semibold"
@@ -290,11 +471,16 @@ I have just placed an order on your website.`
                   rows={5}
                   value={address}
                   onChange={(e) =>
-                    setAddress(e.target.value)
+                    setAddress(
+                      e.target.value
+                    )
                   }
                   className="w-full rounded-xl bg-zinc-800 p-4 outline-none focus:ring-2 focus:ring-yellow-500"
                 />
+
               </div>
+
+              {/* Submit */}
 
               <button
                 type="submit"
@@ -311,6 +497,7 @@ I have just placed an order on your website.`
           </form>
 
         </div>
+
       </main>
 
       <Footer />

@@ -34,13 +34,10 @@ export default function LoginPage() {
         return;
       }
 
-      const response = await fetch(
-        "/api/auth/me",
-        {
-          method: "GET",
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/auth/me", {
+        method: "GET",
+        cache: "no-store",
+      });
 
       const result = await response.json();
 
@@ -54,6 +51,34 @@ export default function LoginPage() {
         return;
       }
 
+      /*
+       * Get the page the customer was trying to access
+       * before being sent to login.
+       *
+       * Example:
+       * /login?redirect=/checkout
+       *
+       * After successful login:
+       * customer returns to /checkout
+       */
+      const params = new URLSearchParams(
+        window.location.search
+      );
+
+      const requestedRedirect =
+        params.get("redirect");
+
+      /*
+       * Only allow internal paths.
+       * This prevents someone from using the redirect
+       * parameter to send users to an external website.
+       */
+      const redirectTo =
+        requestedRedirect &&
+        requestedRedirect.startsWith("/")
+          ? requestedRedirect
+          : "/account";
+
       if (result.role === "admin") {
         router.push("/admin");
         router.refresh();
@@ -61,7 +86,7 @@ export default function LoginPage() {
       }
 
       if (result.role === "customer") {
-        router.push("/account");
+        router.push(redirectTo);
         router.refresh();
         return;
       }
@@ -72,10 +97,7 @@ export default function LoginPage() {
 
       await supabaseBrowser.auth.signOut();
     } catch (error) {
-      console.error(
-        "Login error:",
-        error
-      );
+      console.error("Login error:", error);
 
       setError(
         "Something went wrong while logging in."
@@ -87,7 +109,6 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-black px-6 pt-32 pb-20 text-white">
-
       <div className="mx-auto max-w-md">
 
         <div className="rounded-3xl bg-zinc-900 p-8 shadow-2xl">
@@ -111,6 +132,8 @@ export default function LoginPage() {
             className="mt-8 space-y-5"
           >
 
+            {/* Email */}
+
             <div>
               <label
                 htmlFor="email"
@@ -132,13 +155,26 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Password */}
+
             <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block font-semibold"
-              >
-                Password
-              </label>
+              <div className="mb-2 flex items-center justify-between">
+
+                <label
+                  htmlFor="password"
+                  className="font-semibold"
+                >
+                  Password
+                </label>
+
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-yellow-500 hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+
+              </div>
 
               <input
                 id="password"
@@ -153,6 +189,8 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Login Button */}
+
             <button
               type="submit"
               disabled={loading}
@@ -164,6 +202,8 @@ export default function LoginPage() {
             </button>
 
           </form>
+
+          {/* Register */}
 
           <div className="mt-8 text-center text-zinc-400">
 
@@ -178,22 +218,11 @@ export default function LoginPage() {
               Create an account
             </Link>
 
-            
-            <div className="mt-2 text-right">
-  <Link
-    href="/forgot-password"
-    className="text-sm font-semibold text-yellow-500 hover:underline"
-  >
-    Forgot Password?
-  </Link>
-</div>
-
           </div>
 
         </div>
 
       </div>
-
     </main>
   );
 }

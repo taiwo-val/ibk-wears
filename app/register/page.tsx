@@ -34,36 +34,79 @@ export default function RegisterPage() {
         return;
       }
 
+      /*
+       * Remember where the customer came from.
+       *
+       * Example:
+       * /register?redirect=/checkout
+       *
+       * After successful registration, the customer
+       * will be sent back to /checkout.
+       */
+      const params = new URLSearchParams(
+        window.location.search
+      );
+
+      const requestedRedirect =
+        params.get("redirect");
+
+      /*
+       * Only allow internal paths.
+       * This prevents redirecting users to
+       * external websites.
+       */
+      const redirectTo =
+        requestedRedirect &&
+        requestedRedirect.startsWith("/")
+          ? requestedRedirect
+          : "/account";
+
       const {
         data,
         error: signUpError,
-      } = await supabaseBrowser.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone,
+      } =
+        await supabaseBrowser.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              phone,
+            },
           },
-        },
-      });
+        });
 
       if (signUpError) {
         setError(signUpError.message);
         return;
       }
 
+      /*
+       * If Supabase immediately creates an active
+       * session, send the customer to their
+       * intended destination.
+       */
       if (data.session) {
-        router.push("/account");
+        router.push(redirectTo);
         router.refresh();
         return;
       }
 
+      /*
+       * If email confirmation is enabled,
+       * the customer must confirm their email first.
+       *
+       * We preserve the redirect destination
+       * by adding it to the login link.
+       */
       setMessage(
         "Account created successfully. Please check your email to confirm your account before logging in."
       );
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error(
+        "Registration error:",
+        error
+      );
 
       setError(
         "Something went wrong while creating your account."
@@ -105,6 +148,8 @@ export default function RegisterPage() {
             className="mt-8 space-y-5"
           >
 
+            {/* Full Name */}
+
             <div>
               <label
                 htmlFor="fullName"
@@ -125,6 +170,8 @@ export default function RegisterPage() {
                 className="w-full rounded-xl bg-zinc-800 p-4 outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
+
+            {/* Phone */}
 
             <div>
               <label
@@ -147,6 +194,8 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Email */}
+
             <div>
               <label
                 htmlFor="email"
@@ -167,6 +216,8 @@ export default function RegisterPage() {
                 className="w-full rounded-xl bg-zinc-800 p-4 outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
+
+            {/* Password */}
 
             <div>
               <label
@@ -193,6 +244,8 @@ export default function RegisterPage() {
               </p>
             </div>
 
+            {/* Create Account */}
+
             <button
               type="submit"
               disabled={loading}
@@ -205,6 +258,8 @@ export default function RegisterPage() {
 
           </form>
 
+          {/* Login */}
+
           <div className="mt-8 text-center text-zinc-400">
 
             <p>
@@ -212,7 +267,13 @@ export default function RegisterPage() {
             </p>
 
             <Link
-              href="/login"
+              href={
+                requestedRedirect
+                  ? `/login?redirect=${encodeURIComponent(
+                      requestedRedirect
+                    )}`
+                  : "/login"
+              }
               className="mt-2 inline-block font-bold text-yellow-500 hover:text-yellow-400"
             >
               Login
