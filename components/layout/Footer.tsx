@@ -156,7 +156,7 @@ export default function Footer() {
             {/* WhatsApp */}
 
             <a
-              href="https://wa.me/2348102623213"
+              href="https://wa.me/2348067942779"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat with IBK WEARS on WhatsApp"
