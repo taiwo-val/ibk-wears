@@ -4,6 +4,45 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
+    /*
+     * Check authentication first.
+     * Only logged-in users are allowed to create orders.
+     */
+    const supabase = await createSupabaseServerClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error(
+        "Authentication error:",
+        authError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "We could not verify your account.",
+        },
+        { status: 401 }
+      );
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error:
+            "You must be logged in to place an order.",
+        },
+        { status: 401 }
+      );
+    }
+
+    /*
+     * Read the request body
+     */
     const body = await request.json();
 
     const customerName = String(
@@ -20,72 +59,82 @@ export async function POST(request: NextRequest) {
 
     const items = body.items;
 
+    /*
+     * Validate customer name
+     */
     if (!customerName) {
       return NextResponse.json(
         {
-          error: "Customer name is required.",
+          error:
+            "Customer name is required.",
         },
         { status: 400 }
       );
     }
 
+    /*
+     * Validate phone
+     */
     if (!phone) {
       return NextResponse.json(
         {
-          error: "Phone number is required.",
+          error:
+            "Phone number is required.",
         },
         { status: 400 }
       );
     }
 
+    /*
+     * Validate address
+     */
     if (!address) {
       return NextResponse.json(
         {
-          error: "Delivery address is required.",
+          error:
+            "Delivery address is required.",
         },
         { status: 400 }
       );
     }
 
+    /*
+     * Validate cart items
+     */
     if (
       !Array.isArray(items) ||
       items.length === 0
     ) {
       return NextResponse.json(
         {
-          error: "Your cart is empty.",
+          error:
+            "Your cart is empty.",
         },
         { status: 400 }
       );
     }
 
-    let userId: string | null = null;
-
-    try {
-      const supabase =
-        await createSupabaseServerClient();
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      userId = user?.id ?? null;
-    } catch (authError) {
-      console.error(
-        "Could not read logged-in user:",
-        authError
-      );
-    }
-
+    /*
+     * Create the order using the authenticated
+     * user's ID.
+     *
+     * We NEVER accept the user ID from the client.
+     */
     const { data, error } =
       await supabaseAdmin.rpc(
         "create_order",
         {
-          p_customer_name: customerName,
+          p_customer_name:
+            customerName,
+
           p_phone: phone,
-          p_address: address,
+
+          p_address:
+            address,
+
           p_items: items,
-          p_user_id: userId,
+
+          p_user_id: user.id,
         }
       );
 
@@ -97,7 +146,9 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: error.message,
+          error:
+            error.message ||
+            "The order could not be created.",
         },
         { status: 400 }
       );
@@ -107,6 +158,7 @@ export async function POST(request: NextRequest) {
       {
         message:
           "Order created successfully.",
+
         order: data,
       },
       { status: 201 }
