@@ -212,7 +212,7 @@ export default function LoginPage() {
             </p>
 
             <Link
-              href="/register"
+  href="/register?redirect=/checkout"
               className="mt-2 inline-block font-bold text-yellow-500 hover:text-yellow-400"
             >
               Create an account

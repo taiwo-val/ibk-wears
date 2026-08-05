@@ -115,17 +115,6 @@ export default function QuickViewModal({
                 disabled={!isInStock}
               />
 
-              <a
-                href={`https://wa.me/08067942779?text=${encodeURIComponent(
-                  `Hello IBK WEARS, I want to order ${product.name}.`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block rounded-xl border border-green-500 py-4 text-center font-bold text-green-500 hover:bg-green-500 hover:text-black"
-              >
-                📱 Order on WhatsApp
-              </a>
-
               <Link
                 href={`/shop/${product.id}`}
                 onClick={onClose}

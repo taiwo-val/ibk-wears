@@ -266,18 +266,12 @@ export default function RegisterPage() {
               Already have an account?
             </p>
 
-            <Link
-              href={
-                requestedRedirect
-                  ? `/login?redirect=${encodeURIComponent(
-                      requestedRedirect
-                    )}`
-                  : "/login"
-              }
-              className="mt-2 inline-block font-bold text-yellow-500 hover:text-yellow-400"
-            >
-              Login
-            </Link>
+           <Link
+  href="/login?redirect=/checkout"
+  className="mt-2 inline-block font-bold text-yellow-500 hover:text-yellow-400"
+>
+  Login
+</Link>
 
           </div>
 

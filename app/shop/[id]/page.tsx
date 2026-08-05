@@ -217,21 +217,6 @@ export default async function ProductPage({
                   disabled={!isInStock}
                 />
 
-                <a
-                  href={`https://wa.me/08067942779?text=${encodeURIComponent(
-                    `Hello IBK WEARS, I want to order ${product.name}.`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`rounded-xl border border-green-500 px-8 py-4 font-bold text-green-500 hover:bg-green-500 hover:text-black ${
-                    !isInStock
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }`}
-                >
-                  📱 Order on WhatsApp
-                </a>
-
               </div>
                             <div className="mt-12 rounded-2xl bg-zinc-900 p-6">
 
