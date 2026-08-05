@@ -2,11 +2,18 @@ import Navbar from "@/components/layout/Navbar";
 import { supabaseAdmin } from "@/lib/supabase";
 import OrderStatus from "@/components/admin/OrderStatus";
 
+export const dynamic = "force-dynamic";
+
 export default async function OrdersPage() {
-  const { data: orders, error } = await supabaseAdmin
+  const {
+    data: orders,
+    error,
+  } = await supabaseAdmin
     .from("orders")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", {
+      ascending: false,
+    });
 
   if (error) {
     return (
@@ -15,7 +22,9 @@ export default async function OrdersPage() {
           Failed to load orders
         </h1>
 
-        <p className="mt-4">{error.message}</p>
+        <p className="mt-4 text-zinc-300">
+          {error.message}
+        </p>
       </main>
     );
   }
@@ -24,97 +33,171 @@ export default async function OrdersPage() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-black pt-32 pb-20 text-white">
-        <div className="mx-auto max-w-7xl px-6">
+      <main className="min-h-screen bg-black px-6 pt-32 pb-20 text-white">
+        <div className="mx-auto max-w-7xl">
 
-          <h1 className="mb-10 text-5xl font-black">
-            Customer Orders
-          </h1>
+          {/* Header */}
+
+          <div className="mb-10">
+            <p className="text-sm uppercase tracking-[0.3em] text-yellow-500">
+              Admin Dashboard
+            </p>
+
+            <h1 className="mt-3 text-5xl font-black">
+              Customer Orders
+            </h1>
+
+            <p className="mt-4 text-zinc-400">
+              Manage customer orders and update their delivery status.
+            </p>
+          </div>
+
+          {/* Empty */}
 
           {orders.length === 0 ? (
-            <div className="rounded-xl bg-zinc-900 p-10 text-center">
-              No orders yet.
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-12 text-center">
+
+              <div className="text-5xl">
+                📦
+              </div>
+
+              <h2 className="mt-5 text-2xl font-bold">
+                No Orders Yet
+              </h2>
+
+              <p className="mt-3 text-zinc-400">
+                Customer orders will appear here when they place an order.
+              </p>
+
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl bg-zinc-900">
+            <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
 
-              <table className="w-full">
+              <div className="overflow-x-auto">
 
-                <thead className="bg-zinc-800">
+                <table className="w-full min-w-[1000px]">
 
-                  <tr>
+                  <thead className="bg-zinc-800">
 
-                    <th className="p-4 text-left">
-                      Customer
-                    </th>
+                    <tr>
 
-                    <th className="p-4 text-left">
-                      Phone
-                    </th>
+                      <th className="p-5 text-left text-sm font-bold uppercase tracking-wider text-zinc-300">
+                        Customer
+                      </th>
 
-                    <th className="p-4 text-left">
-                      Address
-                    </th>
+                      <th className="p-5 text-left text-sm font-bold uppercase tracking-wider text-zinc-300">
+                        Phone
+                      </th>
 
-                    <th className="p-4 text-left">
-                      Total
-                    </th>
+                      <th className="p-5 text-left text-sm font-bold uppercase tracking-wider text-zinc-300">
+                        Address
+                      </th>
 
-                    <th className="p-4 text-left">
-                      Status
-                    </th>
+                      <th className="p-5 text-left text-sm font-bold uppercase tracking-wider text-zinc-300">
+                        Total
+                      </th>
 
-                    <th className="p-4 text-left">
-                      Date
-                    </th>
+                      <th className="p-5 text-left text-sm font-bold uppercase tracking-wider text-zinc-300">
+                        Status
+                      </th>
 
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {orders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="border-t border-zinc-800"
-                    >
-
-                     <td className="p-4">
-  <OrderStatus
-    id={order.id}
-    status={order.status}
-  />
-</td>
-
-                      <td className="p-4">
-                        {order.phone}
-                      </td>
-
-                      <td className="p-4">
-                        {order.address}
-                      </td>
-
-                      <td className="p-4 text-yellow-500 font-bold">
-                        ₦{Number(order.total).toLocaleString()}
-                      </td>
-
-                      <td className="p-4">
-                        {order.status}
-                      </td>
-
-                      <td className="p-4">
-                        {new Date(
-                          order.created_at
-                        ).toLocaleDateString()}
-                      </td>
+                      <th className="p-5 text-left text-sm font-bold uppercase tracking-wider text-zinc-300">
+                        Date
+                      </th>
 
                     </tr>
-                  ))}
 
-                </tbody>
+                  </thead>
 
-              </table>
+                  <tbody>
+
+                    {orders.map((order) => (
+
+                      <tr
+                        key={order.id}
+                        className="border-t border-zinc-800 transition hover:bg-zinc-800/40"
+                      >
+
+                        {/* Customer */}
+
+                        <td className="p-5">
+                          <div>
+                            <p className="font-bold text-white">
+                              {order.customer_name}
+                            </p>
+
+                            <p className="mt-1 max-w-[220px] break-all text-xs text-zinc-500">
+                              Order ID: {order.id}
+                            </p>
+                          </div>
+                        </td>
+
+                        {/* Phone */}
+
+                        <td className="p-5 text-zinc-300">
+                          {order.phone}
+                        </td>
+
+                        {/* Address */}
+
+                        <td className="p-5">
+
+                          <p className="max-w-[260px] leading-6 text-zinc-300">
+                            {order.address}
+                          </p>
+
+                        </td>
+
+                        {/* Total */}
+
+                        <td className="p-5">
+
+                          <p className="font-bold text-yellow-500">
+                            ₦
+                            {Number(
+                              order.total
+                            ).toLocaleString()}
+                          </p>
+
+                        </td>
+
+                        {/* Status */}
+
+                        <td className="p-5">
+
+                          <OrderStatus
+                            id={order.id}
+                            status={order.status}
+                          />
+
+                        </td>
+
+                        {/* Date */}
+
+                        <td className="p-5 text-zinc-400">
+
+                          {new Date(
+                            order.created_at
+                          ).toLocaleDateString(
+                            "en-NG",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+
+                        </td>
+
+                      </tr>
+
+                    ))}
+
+                  </tbody>
+
+                </table>
+
+              </div>
 
             </div>
           )}
